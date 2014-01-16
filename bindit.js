@@ -819,7 +819,7 @@
     return result;
   };
 
-  Template.OftenAttributes = ['id', 'name', 'class', 'style', 'src', 'href', 'value', BindIt.DATA_BIND_ATTRIBUTE, BindIt.VIEW_ATTRIBUTE];
+  Template.OftenAttributes = ['id', 'name', 'class', 'style', 'src', 'href', 'value', BindIt.DATA_BIND_ATTRIBUTE, BindIt.VIEW_ATTRIBUTE, 'item-view'];
 
   Template.TEMPLATE_ID_PROPERTY = 'template-id';
 
