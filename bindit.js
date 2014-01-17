@@ -841,6 +841,8 @@
       var _base;
       this.element = element;
       ListView.__super__.constructor.call(this, this.element);
+      this.itemsSubscribes = new BindIt.Hash;
+      this.itemsElements = [];
       this.calculateItemView();
       if (this.itemView == null) {
         return;
@@ -848,8 +850,6 @@
       if (typeof (_base = this.itemView).init === "function") {
         _base.init(this);
       }
-      this.itemsSubscribes = new BindIt.Hash;
-      this.itemsElements = [];
       this.changed();
     }
 
@@ -882,7 +882,10 @@
         if (field === 'length') {
           if (oldValue < value) {
             for (index = _i = oldValue, _ref = value - 1; oldValue <= _ref ? _i <= _ref : _i >= _ref; index = oldValue <= _ref ? ++_i : --_i) {
-              this.element.appendChild(this.createItemElement(model, index));
+              element = this.createItemElement(model, index);
+              if (element != null) {
+                this.element.appendChild(element);
+              }
             }
             return;
           } else {
@@ -945,6 +948,9 @@
       }
       if (model === viewValue && arrayEvent === BindIt.Model.ArrayEvents.INSERTED) {
         element = this.createItemElement(model, index);
+        if (element == null) {
+          return;
+        }
         if (viewValue.length > index + 1) {
           for (i = _m = _ref2 = index + 1, _ref3 = viewValue.length - 1; _ref2 <= _ref3 ? _m <= _ref3 : _m >= _ref3; i = _ref2 <= _ref3 ? ++_m : --_m) {
             this.itemView.changed(this.itemsElements[i], viewValue, i, viewValue.selectedItem === i, viewValue.selectedItems.indexOf(i) >= 0);
@@ -987,7 +993,7 @@
     };
 
     ListView.prototype.apocalyptic = function() {
-      var fragment, index, value, _i, _ref;
+      var element, fragment, index, value, _i, _ref;
       while (this.element.firstChild != null) {
         this.element.removeChild(this.element.firstChild);
       }
@@ -999,7 +1005,10 @@
       fragment = document.createDocumentFragment();
       if (value.length > 0) {
         for (index = _i = 0, _ref = value.length - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; index = 0 <= _ref ? ++_i : --_i) {
-          fragment.appendChild(this.createItemElement(value, index));
+          element = this.createItemElement(value, index);
+          if (element != null) {
+            fragment.appendChild(element);
+          }
         }
       }
       return this.element.appendChild(fragment);
@@ -1007,6 +1016,9 @@
 
     ListView.prototype.createItemElement = function(value, index) {
       var element;
+      if (this.itemView == null) {
+        return;
+      }
       element = this.itemView.create(value, index, value.selectedItem === index, value.selectedItems.indexOf(index) >= 0);
       this.itemsElements.splice(index, 0, element);
       return element;
