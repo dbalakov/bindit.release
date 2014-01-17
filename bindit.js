@@ -432,7 +432,9 @@
         if (result instanceof BindIt.ModelArray) {
           result = result[result.selectedItem];
         }
-        result = result[path.shift()];
+        if (result != null) {
+          result = result[path.shift()];
+        }
       }
       if (result instanceof BindIt.ModelArray && returnArray !== true) {
         result = result[result.selectedItem];
