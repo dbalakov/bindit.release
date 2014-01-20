@@ -444,9 +444,12 @@
       return result;
     };
 
-    View.prototype.setValue = function(value) {
+    View.prototype.setValue = function(value, path) {
       var modelPath, parent;
-      modelPath = this.getModelPath();
+      modelPath = path;
+      if (path == null) {
+        modelPath = this.getModelPath();
+      }
       if (modelPath == null) {
         modelPath = [];
       }
@@ -1518,7 +1521,7 @@
         if (model == null) {
           return;
         }
-        return model.selectedItem = parseInt(view.element.value);
+        return view.setValue(model, view.getModelPath(view.element.getAttribute(Select.TO_ATTRIBUTE)));
       };
     };
 
