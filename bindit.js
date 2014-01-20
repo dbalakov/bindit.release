@@ -416,9 +416,11 @@
       this.refreshSubscribes();
     }
 
-    View.prototype.getValue = function(returnArray) {
-      var path, result;
-      path = this.getModelPath();
+    View.prototype.getValue = function(returnArray, path) {
+      var result;
+      if (path == null) {
+        path = this.getModelPath();
+      }
       if ((path == null) || path.length === 0) {
         return null;
       }
@@ -501,10 +503,13 @@
       return model.apply(parent, arguments);
     };
 
-    View.prototype.getModelPath = function() {
+    View.prototype.getModelPath = function(path) {
       var bindingPath, parent;
-      bindingPath = this.element.getAttribute(BindIt.DATA_BIND_ATTRIBUTE);
-      if (bindingPath === null) {
+      bindingPath = path;
+      if (bindingPath == null) {
+        bindingPath = this.element.getAttribute(BindIt.DATA_BIND_ATTRIBUTE);
+      }
+      if (bindingPath == null) {
         return null;
       }
       parent = this.element.parentNode;
@@ -528,56 +533,70 @@
     };
 
     View.prototype.refreshSubscribes = function() {
-      var m, model, modelPath, newSubscribes, toSubscribe, toUnsubscribe, _i, _j, _k, _l, _len, _len1, _len2, _len3, _ref;
-      modelPath = this.getModelPath();
-      if (modelPath == null) {
-        modelPath = [];
-      }
-      model = window;
-      newSubscribes = [];
-      while (modelPath.length > 0) {
-        if (model == null) {
-          break;
+      var extraModel, extraModels, extraPath, m, model, modelPath, modelPaths, newSubscribes, toSubscribe, toUnsubscribe, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _m, _n, _ref;
+      modelPaths = [];
+      modelPaths.push(this.getModelPath());
+      extraModels = this.getExtraModels();
+      if (extraModels != null) {
+        for (_i = 0, _len = extraModels.length; _i < _len; _i++) {
+          extraModel = extraModels[_i];
+          extraPath = this.getModelPath(extraModel);
+          if (extraPath != null) {
+            modelPaths.push(extraPath);
+          }
         }
-        if (model instanceof BindIt.ModelArray) {
-          model = model[model.selectedItem];
+      }
+      newSubscribes = [];
+      for (_j = 0, _len1 = modelPaths.length; _j < _len1; _j++) {
+        modelPath = modelPaths[_j];
+        if (modelPath == null) {
+          modelPath = [];
+        }
+        model = window;
+        while (modelPath.length > 0) {
+          if (model == null) {
+            break;
+          }
+          if (model instanceof BindIt.ModelArray) {
+            model = model[model.selectedItem];
+            if (model instanceof BindIt.Model) {
+              newSubscribes.push(model);
+            }
+          }
+          if (model == null) {
+            break;
+          }
+          model = model[modelPath.shift()];
           if (model instanceof BindIt.Model) {
             newSubscribes.push(model);
           }
         }
-        if (model == null) {
-          break;
-        }
-        model = model[modelPath.shift()];
-        if (model instanceof BindIt.Model) {
-          newSubscribes.push(model);
-        }
+        this.fillSubscribes(model, newSubscribes, false);
       }
-      this.fillSubscribes(model, newSubscribes, false);
       toUnsubscribe = [];
       toSubscribe = [];
-      for (_i = 0, _len = newSubscribes.length; _i < _len; _i++) {
-        m = newSubscribes[_i];
+      for (_k = 0, _len2 = newSubscribes.length; _k < _len2; _k++) {
+        m = newSubscribes[_k];
         if (this.subscribes.indexOf(m) < 0) {
           toSubscribe.push(m);
         }
       }
       _ref = this.subscribes;
-      for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
-        m = _ref[_j];
+      for (_l = 0, _len3 = _ref.length; _l < _len3; _l++) {
+        m = _ref[_l];
         if (newSubscribes.indexOf(m) < 0) {
           toUnsubscribe.push(m);
         }
       }
-      for (_k = 0, _len2 = toSubscribe.length; _k < _len2; _k++) {
-        m = toSubscribe[_k];
+      for (_m = 0, _len4 = toSubscribe.length; _m < _len4; _m++) {
+        m = toSubscribe[_m];
         m.addEventListener(BindIt.Model.Events.VALUE_CHANGED, this.modelHandler);
         if (m instanceof BindIt.ModelArray) {
           m.addEventListener(BindIt.Model.Events.ARRAY_CHANGED, this.modelArrayHandler);
         }
       }
-      for (_l = 0, _len3 = toUnsubscribe.length; _l < _len3; _l++) {
-        m = toUnsubscribe[_l];
+      for (_n = 0, _len5 = toUnsubscribe.length; _n < _len5; _n++) {
+        m = toUnsubscribe[_n];
         m.removeEventListener(BindIt.Model.Events.VALUE_CHANGED, this.modelHandler);
         if (m instanceof BindIt.ModelArray) {
           m.removeEventListener(BindIt.Model.Events.ARRAY_CHANGED, this.modelArrayHandler);
@@ -610,6 +629,10 @@
         _results.push(this.fillSubscribes(model[property], subscribes, true));
       }
       return _results;
+    };
+
+    View.prototype.getExtraModels = function() {
+      return null;
     };
 
     return View;
@@ -867,6 +890,9 @@
     ListView.prototype.callChanged = function(model, event, arrayEvent, index, field, oldValue, value) {
       var diff, element, i, item, itemElement, node, viewValue, _i, _j, _k, _l, _len, _len1, _m, _n, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
       viewValue = this.getValue(true);
+      if (viewValue == null) {
+        return;
+      }
       item = this.itemsSubscribes.get(model);
       if (arrayEvent !== BindIt.Model.ArrayEvents.INSERTED && arrayEvent !== BindIt.Model.ArrayEvents.REMOVED) {
         index = viewValue.indexOf(item);
@@ -1462,5 +1488,123 @@
   BindIt.View.Radio = RadioView;
 
   BindIt.View.Input.byType.radio = RadioView;
+
+}).call(this);
+// Generated by CoffeeScript 1.6.3
+(function() {
+  var Select, SelectItemView,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  SelectItemView = (function() {
+    function SelectItemView(view) {
+      this.view = view;
+    }
+
+    SelectItemView.prototype.init = function(view) {
+      return view.element.onchange = function() {
+        var model;
+        model = view.getValue(true);
+        if (model == null) {
+          return;
+        }
+        return model.selectedItem = parseInt(view.element.value);
+      };
+    };
+
+    SelectItemView.prototype.create = function(model, index) {
+      var element;
+      element = document.createElement('option');
+      this.initElement(element, model, index);
+      return element;
+    };
+
+    SelectItemView.prototype.changed = function(element, model, index, selected) {
+      return this.initElement(element, model, index);
+    };
+
+    SelectItemView.prototype.initElement = function(element, model, index) {
+      var toValue, value;
+      try {
+        toValue = this.view.getValue(false, this.view.getModelPath(this.view.element.getAttribute(Select.TO_ATTRIBUTE)));
+      } catch (_error) {}
+      value = this.getValue(element, model, index);
+      element.setAttribute('value', value);
+      element.innerHTML = this.getName(element, model, index);
+      return this.setSelected(element, toValue === value);
+    };
+
+    SelectItemView.prototype.getValue = function(element, model, index) {
+      var value, valueProperty;
+      value = model[index];
+      if (!(value instanceof Object)) {
+        return value;
+      }
+      valueProperty = Select.DEFAULT_VALUE_PROPERTY;
+      if (element.hasAttribute(Select.VALUE_BIND_ATTRIBUTE)) {
+        valueProperty = element.getAttribute(Select.VALUE_BIND_ATTRIBUTE);
+      }
+      return value[valueProperty];
+    };
+
+    SelectItemView.prototype.getName = function(element, model, index) {
+      var name, nameProperty;
+      name = model[index];
+      if (!(name instanceof Object)) {
+        return name;
+      }
+      nameProperty = Select.DEFAULT_NAME_PROPERTY;
+      if (element.hasAttribute(Select.NAME_BIND_ATTRIBUTE)) {
+        nameProperty = element.getAttribute(Select.NAME_BIND_ATTRIBUTE);
+      }
+      return name[nameProperty];
+    };
+
+    SelectItemView.prototype.setSelected = function(element, selected) {
+      if (selected) {
+        return element.setAttribute('selected', '');
+      }
+      return element.removeAttribute('selected');
+    };
+
+    return SelectItemView;
+
+  })();
+
+  Select = (function(_super) {
+    __extends(Select, _super);
+
+    function Select(element) {
+      this.element = element;
+      this.valueBind = this.element.getAttribute(Select.VALUE_BIND_ATTRIBUTE);
+      this.nameBind = this.element.getAttribute(Select.NAME_BIND_ATTRIBUTE);
+      Select.__super__.constructor.call(this, this.element);
+    }
+
+    Select.prototype.calculateItemView = function() {
+      return this.itemView = new SelectItemView(this);
+    };
+
+    Select.prototype.getExtraModels = function() {
+      return [this.element.getAttribute(Select.TO_ATTRIBUTE)];
+    };
+
+    return Select;
+
+  })(BindIt.View.List);
+
+  Select.ItemView = SelectItemView;
+
+  Select.TO_ATTRIBUTE = 'to';
+
+  Select.VALUE_BIND_ATTRIBUTE = 'value-bind';
+
+  Select.NAME_BIND_ATTRIBUTE = 'name-bind';
+
+  Select.DEFAULT_VALUE_PROPERTY = 'id';
+
+  Select.DEFAULT_NAME_PROPERTY = 'name';
+
+  BindIt.View.SelectSetValue = Select;
 
 }).call(this);
