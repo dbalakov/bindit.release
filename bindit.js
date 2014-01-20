@@ -504,7 +504,7 @@
     };
 
     View.prototype.getModelPath = function(path) {
-      var bindingPath, parent;
+      var bindingPath, item, parent, result, split, _i, _len;
       bindingPath = path;
       if (bindingPath == null) {
         bindingPath = this.element.getAttribute(BindIt.DATA_BIND_ATTRIBUTE);
@@ -513,13 +513,23 @@
         return null;
       }
       parent = this.element.parentNode;
-      while (parent !== null) {
-        if ((parent.hasAttribute != null) && parent.hasAttribute(BindIt.FORM_BIND_ATTRIBUTE)) {
-          bindingPath = "" + (parent.getAttribute(BindIt.FORM_BIND_ATTRIBUTE)) + ":" + bindingPath;
+      if (bindingPath[0] !== ':') {
+        while (parent !== null) {
+          if ((parent.hasAttribute != null) && parent.hasAttribute(BindIt.FORM_BIND_ATTRIBUTE)) {
+            bindingPath = "" + (parent.getAttribute(BindIt.FORM_BIND_ATTRIBUTE)) + ":" + bindingPath;
+          }
+          parent = parent.parentNode;
         }
-        parent = parent.parentNode;
       }
-      return bindingPath.split(":");
+      split = bindingPath.split(":");
+      result = [];
+      for (_i = 0, _len = split.length; _i < _len; _i++) {
+        item = split[_i];
+        if ((item != null) && item !== '') {
+          result.push(item);
+        }
+      }
+      return result;
     };
 
     View.prototype.modelHandler = function(model, property, oldValue, newValue) {
