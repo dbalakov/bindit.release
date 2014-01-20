@@ -1517,7 +1517,7 @@
     SelectItemView.prototype.init = function(view) {
       return view.element.onchange = function() {
         var model;
-        model = view.getValue(true);
+        model = view.element.value;
         if (model == null) {
           return;
         }
