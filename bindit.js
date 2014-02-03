@@ -705,7 +705,8 @@
     _results = [];
     for (_i = 0, _len = elements.length; _i < _len; _i++) {
       element = elements[_i];
-      _results.push(createView(element));
+      createView(element);
+      _results.push(processElement(element));
     }
     return _results;
   };
